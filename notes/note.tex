@@ -146,6 +146,29 @@ gaussian quad weights:
 \end{tabular}
 
 
+\newpage
+
+\subsection {linear local mass computation}
+
+assume $\psi_i$ is linear
+how to compute:
+
+\begin{equation*}
+  \begin{split}
+    \begin{bmatrix}
+      \int_k\psi_1 s \psi_1 d\Omega_k & \int_k\psi_1 s \psi_2 d\Omega_k & \int_k\psi_1 s \psi_3 d\Omega_k \\
+      \int_k\psi_2 s \psi_1 d\Omega_k & \int_k\psi_2 s \psi_2 d\Omega_k & \int_k\psi_2 s \psi_3 d\Omega_k \\
+            \int_k\psi_3 s \psi_1 d\Omega_k & \int_k\psi_3 s \psi_2 d\Omega_k & \int_k\psi_3 s \psi_3 d\Omega_k \\
+    \end{bmatrix} = \\
+    \begin{bmatrix}
+      \sum_q\psi_1(x_q, y_q) s(x_q, y_q) \psi_1(x_q, y_q) w_q & \sum_q\psi_1(x_q, y_q) s(x_q, y_q)\psi_2(x_q, y_q) w_q & \sum_q\psi_1(x_q, y_q) s(x_q, y_q)\psi_3(x_q,y_q) w_q \\
+      \sum_q\psi_2(x_q, y_q) s(x_q, y_q)\psi_1(x_q, y_q) w_q & \sum_q\psi_2(x_q, y_q) s(x_q, y_q)\psi_2(x_q, y_q) w_q & \sum_q\psi_2(x_q, y_q) s(x_q, y_q)\psi_3(x_q,y_q) w_q \\
+      \sum_q\psi_3(x_q,y_q) s(x_q, y_q)\psi_1(x_q, y_q) w_q & \sum_q\psi_3(x_q,y_q) s(x_q, y_q)\psi_2(x_q, y_q) w_q & \sum_q\psi_3(x_q,y_q) s(x_q, y_q)\psi_3(x_q,y_q) w_q \\
+    \end{bmatrix} = \\
+  \end{split}
+\end{equation}
+
+
 
 
 

@@ -27,6 +27,8 @@ int main(int argc, char *argv[])
   int *EToV;         // length = 3 * num_elements         -  vertices by element
   int *degree;       // length = num_nodes                -  degree - 1 (# neighboring elements) of node by node
   csr *adj_matrix;  //  length = [num_nodes x num_nodes]  -  adjacency matrix of mesh
+  csr *M;           //  length = [num_nodes x num_nodes]  -  global mass matrix
+  csr *S;           //  length = [num_nodes x num_nodes]  -  global stiffness matrix
   int num_nodes;
   int num_elements;
   int num_edges;
@@ -43,16 +45,16 @@ int main(int argc, char *argv[])
 
   error = tri_mesh_csr_adj_matrix(&adj_matrix, EToV, num_elements, num_edges, num_nodes);
   error = cuthill_mckee(adj_matrix, degree, &EToV, &vx, &vy, num_nodes, num_elements);
-  printf("Found bandwidth reduced ordering\n");
+  printf("\nFound bandwidth reduced node ordering\n\n");
   free_csr_novals(adj_matrix);
-
-  assemble_mass(EToV, vx, vy, num_nodes, num_elements);
+  
+  assemble_matrices(&S, &M, EToV, vx, vy, num_nodes, num_elements);
   
   free(vx);
   free(vy);
   free(degree);
   free(EToV);
-
+  free_csr(M);
   
   return error;
 }
