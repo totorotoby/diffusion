@@ -1,0 +1,152 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb}
+\title{FEM and Inverse notes}
+\author{Tobias Harvey}
+\date{July 2024}
+\begin{document}
+\maketitle
+
+\section{1D Variable Coefficent Diffusion}
+
+$$s(x, t)\frac{\partial u}{\partial t} = \left(t(x,t)\frac{\partial u}{\partial x}\right)_x + q(x,t), \qquad 0 \leq x \leq L, t \leq T$$
+
+$$u(0,t) = \alpha(t)$$
+
+$$u(L,t) = \beta(t)$$
+
+Assuming an approximate solution $u^h$, residual $u^h - u$ can be calculated by moving everything to the LHS and plugging in the approximation:
+
+$$u^h - u = s(x, t)\frac{\partial u^h}{\partial t} - \left(t(x,t)\frac{\partial u^h}{\partial x}\right)_x - q(x,t)$$
+
+enforce that error is not in test function space:
+
+$$\int_0^L s(x, t)\frac{\partial u^h}{\partial t}V(x) dx -  \int_0^L \left(t(x,t)\frac{\partial u^h}{\partial x}\right)_x V(x) dx - \int_0^L q(x,t) V(x) dx = 0$$
+
+Integration by parts:
+
+$$\int_0^L s(x, t)\frac{\partial u^h}{\partial t}V(x) dx +  \int_0^L t(x,t)\frac{\partial u^h}{\partial x}\right \frac{\partial V(x)}{\partial x} dx -n t(x,t)\frac{\partial u^h}{\partial x} V(x)\bigg\rvert_0^L- \int_0^L q(x,t) V(x) dx = 0$$
+
+make space of $V(x)$ finite and expand $u^h = \sum_{j=0}^N \hat{u}_j \psi_j$ in the $\psi$ basis and make $N$ equations for $N$ basis functions:
+
+$$\int_0^L s(x, t)\sum_{j=0}^N \frac{\partial \hat{u}_j}{\partial t} \psi_j\psi_i dx -  \int_0^L t(x,t)\sum_{j=0}^N \hat{u}_j\frac{\partial \psi_j}{\partial x}\right \frac{\partial \psi_i}{\partial x} dx +   =  t(L,t)\beta(t)\psi_{pN}(L) - t(0,t)\alpha(t)\psi_{0}(0) + \int_0^L q(x,t) \psi_i dx$$
+
+this is for a single local element $k$:
+
+$$M^k\hat{u}_t - S^k\hat{u} = F^k$$
+
+$$M^k_{ij} = \int_k s(x, t)\psi_j\psi_i \quad S^k_{ij} = \int_k t(x,t)\frac{\partial \psi_j}{\partial x}\right \frac{\partial \psi_i}{\partial x} dx$$
+
+
+\section{2D Variable Coefficent Diffusion}
+
+$$s(x, y, t)\frac{\partial u}{\partial t} = \left(t(x, y, t)\frac{\partial u}{\partial x}\right)_x + \left(t(x, y, t)\frac{\partial u}{\partial y}\right)_y + q(x, y, t), \qquad 0 \leq x \leq L_x, 0 \leq y \leq L_y, t \leq F$$
+
+% TODO: FIX boundary conditions
+
+$$u(0, y, t) = \alpha(t)$$
+
+$$u(L,t) = \beta(t)$$
+
+Assuming an approximate solution $u^h$, residual $u^h - u$ can be calculated by moving everything to the LHS and plugging in the approximation:
+
+$$u^h - u = s(x, y, t)\frac{\partial u^h}{\partial t} - \left(T(x, y, t)\frac{\partial u^h}{\partial x}\right)_x -\left(t(x, y, t)\frac{\partial u}{\partial y}\right)_y - q(x, y, t)$$
+
+enforce that error is not in test function space:
+
+$$\int_\Omega s(x, y, t)\frac{\partial u^h}{\partial t}V(x) dx -  \int_\Omega \left(T(x, y, t)\frac{\partial u^h}{\partial x}\right)_x V(x) dx - \int_\Omega q(x,t) V(x) dx = 0$$
+
+Integration by parts (greens identity):
+
+\begin{equation*}
+  \begin{split}
+    & \int_\Omega s(x, y, t)\frac{\partial u^h}{\partial t}V(x) dx +  \int_\Omega T(x, y, t)\frac{\partial u^h}{\partial x}\right \frac{\partial V(x)}{\partial x} dx -
+    \int_\Gamma (\boldsymbol{n_x} \cdot \boldsymbol{n_k}) T(x, y, t)\frac{\partial u^h}{\partial x} V(x)+ \\
+    & \int_\Omega T(x, y, t)\frac{\partial u^h}{\partial y}\right \frac{\partial V(x)}{\partial y} dx - \int_\Gamma (\boldsymbol{n_y} \cdot \boldsymbol{n_k}) T(x, y, t)\frac{\partial u^h}{\partial y} V(x)- \\
+    & \int_\Omega q(x,t) V(x) dx = 0
+  \end{split}
+\end{equation}
+
+make space of $V(x)$ finite and expand $u^h = \sum_{j=0}^N \hat{u}_j \psi_j$ in the $\psi$ basis and make $N$ equations for $N$ basis functions:
+
+\begin{equation*}
+  \begin{split}
+    &\int_\Omega s(x, y, t)\sum_{j=0}^N \frac{\partial \hat{u}_j}{\partial t} \psi_j\psi_i dx +  \int_\Omega T(x, y, t)\sum_{j=0}^N \hat{u}_j\frac{\partial \psi_j}{\partial x}\right \frac{\partial \psi_i}{\partial x} dx + \int_\Omega T(x, y, t)\sum_{j=0}^N \hat{u}_j\frac{\partial \psi_j}{\partial y}\right \frac{\partial \psi_i}{\partial y} dx =\\
+    &\text{boundary terms } + \int_\Omega q(x,t) \psi_i dx\\
+\end{equation*}
+  \end{split}
+
+this is for a single local element $k$:
+
+$$M^k\hat{u}_t + S^k_x\hat{u} + S^k_y\hat{u} = F^k$$
+
+$$M^k_{ij} = \int_k s(x, y, t)\psi_j\psi_i \quad S^k_x_{ij} = \int_k T(x, y, t)\frac{\partial \psi_j}{\partial x}\right \frac{\partial \psi_i}{\partial x} dx \quad S^k_y_{ij} = \int_k T(x, y, t)\frac{\partial \psi_j}{\partial y}\right \frac{\partial \psi_i}{\partial y} dx$$
+
+\section{heat 1st order system?}
+
+Alternatively split heat equation into first order system so that:
+
+$$s(x, y, t)\frac{\partial u}{\partial t} = \left(t(x, y, t)\frac{\partial u}{\partial x}\right)_x + \left(t(x, y, t)\frac{\partial u}{\partial y}\right)_y + q(x, y, t), \qquad 0 \leq x \leq L_x, 0 \leq y \leq L_y, t \leq F$$
+
+
+turns into:
+\begin{equation*}
+  \begin{split}
+    s(x, y, t)\frac{\partial u}{\partial t} = \left(\sqrt{t}q)_x + \left(t(x, y, t)\frac{\partial u}{\partial y}\right)_y + q(x, y, t)
+  \end{equation}
+\end{split}
+
+
+\section{basis and matrix construction}
+
+Reference element: (-1, -1), (1, -1), (-1, 1) in the $r, s$ plane. Transformation from the $r,s$ plane to the $x,y$ plane is:
+
+$$T(r,s) = \frac{r+s}{2}v^1 + \frac{r+1}{2}v^2 + \frac{s+1}{2}v^3$$
+where $v^1, v^2, v^3$ are the vertices of the element in the $x,y$ plane.
+
+jacobian of transformation is:
+$$J = \frac{(v^2_x - v^1_x)(v^3_y - v^1_y)}{4} - \frac{(v^2_y - v^1_y)(v^3_x - v^1_x)}{4}$
+
+
+Assuming linear basis functions (lame) they are on the reference element:
+
+\begin{equation*}
+  \begin{split}
+    & \psi_1 = \frac{1}{2}s + \frac{1}{2} \\
+    & \psi_2 = \frac{1}{2}r + \frac{1}{2} \\
+    & \psi_3 = -\frac{1}{2}r - \frac{1}{2}s \\
+  \end{split}
+\end{equation}
+
+derivaties are:
+
+\begin{equation*}
+  \begin{split}
+    \frac{\partial\psi_1}{\partial r} = 0 & \quad \frac{\partial\psi_1}{\partial s} = \frac{1}{2} \\
+    \frac{\partial\psi_2}{\partial r} = \frac{1}{2} & \quad \frac{\partial\psi_2}{\partial s} = 0 \\
+        \frac{\partial\psi_3}{\partial r} = -\frac{1}{2} & \quad \frac{\partial\psi_3}{\partial s} = -\frac{1}{2} \\
+  \end{split}
+\end{equation}
+
+
+Matrices need to be computed with numerical integration because of variable coefficents:
+
+gaussian quad weights:
+
+\begin{tabular}{|c|c|c|}
+\hline
+  r_i & s_i & w_i\\
+\hline
+1/3 & 1/3 & −9/32\\
+3/5 & 1/5 & 25/96\\
+1/5 & 3/5 & 25/96\\
+1/5 & 1/5 & 25/96\\
+\hline
+\end{tabular}
+
+
+
+
+
+\end{document}
