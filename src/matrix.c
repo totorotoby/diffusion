@@ -92,7 +92,7 @@ int write_csr(const csr *matrix, const char *f1, const char *f2, const char *f3)
   int *cols = matrix -> cols;
   int *row_ptr = matrix -> row_ptr;
   double *vals = matrix -> vals;
-
+  
   FILE *fout = fopen(f1, "w");
   
   for (int row = 0 ; row < n+1; row++)
