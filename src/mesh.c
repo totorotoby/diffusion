@@ -45,6 +45,7 @@ int get_mesh(const char *filename, int *num_nodes, int *num_elements,
     }
     offset += strlen(buffer);
   }
+  
   if (found) {
     fseek(mesh_file, offset, SEEK_SET);
     fscanf(mesh_file, "%d", num_nodes);
@@ -71,16 +72,18 @@ int get_mesh(const char *filename, int *num_nodes, int *num_elements,
 	     *EToV + NV_PER_ELEM * n + 1,
 	     *EToV + NV_PER_ELEM * n + 2);
     }
-	
   } else {
     printf("Something is wrong with mesh file format\n");
     return 1;
   }
 
+  //write_EToV_array(*EToV, *num_elements, "plotting/EToV_array");
+  
   fclose(mesh_file);
     
   return 0;
 }
+
 
 // may only work for triangular meshes
 int get_mesh_degrees(const int *EToV, int **degree, int *num_edges,
@@ -108,7 +111,8 @@ int get_mesh_degrees(const int *EToV, int **degree, int *num_edges,
   return 0;
 }
 
-int tri_mesh_csr_adj_matrix(csr **adj_matrix, const int *EToV,
+int tri_mesh_csr_adj_matrix(csr **adj_matrix, int **boundary_nodes,
+			    int *num_boundary_nodes, const int *EToV,
 			    const int num_elements, const int num_edges,
 			    int num_nodes)
 {
@@ -117,6 +121,8 @@ int tri_mesh_csr_adj_matrix(csr **adj_matrix, const int *EToV,
   error = allocate_csr_novals(adj_matrix, 2*num_edges, num_nodes);
 
   // hashing to check if edge has already been added using a * N + b, where a = min(v, u), and b = max(v, u)
+  // this probably won't work if we get too big... O(n^2) storage...
+  // can convert to linked-list or hashed array of linked list
   int *edge_check = (int *) calloc(num_nodes * num_nodes, sizeof(int));
 
   for (int e = 0 ; e < num_elements ; e++)
@@ -131,13 +137,37 @@ int tri_mesh_csr_adj_matrix(csr **adj_matrix, const int *EToV,
 	{
 	  int a = min(edges[edge][0], edges[edge][1]);
 	  int b = max(edges[edge][0], edges[edge][1]);
-	  if (!edge_check[a * num_nodes + b]) {
+	  // problem is here
+	  if (!edge_check[a * num_nodes + b]){
 	    (*adj_matrix) -> row_ptr[a + 1]++;
 	    (*adj_matrix) -> row_ptr[b + 1]++;
-	    edge_check[a * num_nodes + b] = 1;
+	  }
+	  edge_check[a * num_nodes + b]++;
+	}
+    }
+
+  // getting number of boundary nodes
+  *num_boundary_nodes = 0;
+  for (int e = 0 ; e < num_elements ; e++)
+    {
+      int v1 = EToV[3*e];
+      int v2 = EToV[3*e + 1];
+      int v3 = EToV[3*e + 2];
+      
+      int edges[3][2] ={{v1, v2}, {v2, v3}, {v3, v1}};
+      
+      for (int edge = 0; edge < 3 ; edge++)
+	{
+	  int a = min(edges[edge][0], edges[edge][1]);
+	  int b = max(edges[edge][0], edges[edge][1]);
+	  if (edge_check[a * num_nodes + b] == 1){
+	    (*num_boundary_nodes)++;
 	  }
 	}
     }
+
+  printf("# boundary nodes: %d\n", *num_boundary_nodes);
+  *boundary_nodes = (int *) malloc(sizeof(int) * *num_boundary_nodes);
 
   // convert row_ptr from histogram to cumulative sum
   for (int v = 1; v <= num_nodes ; v++)
@@ -149,7 +179,8 @@ int tri_mesh_csr_adj_matrix(csr **adj_matrix, const int *EToV,
   for (int v = 0; v < num_nodes ; v++){
     pos[v] = (*adj_matrix) -> row_ptr[v];
   }
-
+  
+  int b_index = 0;
   for (int e = 0 ; e < num_elements ; e++)
     {
       int v1 = EToV[3*e];
@@ -162,6 +193,23 @@ int tri_mesh_csr_adj_matrix(csr **adj_matrix, const int *EToV,
 	{
 	  int a = min(edges[edge][0], edges[edge][1]);
 	  int b = max(edges[edge][0], edges[edge][1]);
+	  
+	  if (edge_check[a * num_nodes + b] == 1)
+	    {
+	      int found1 = 0;
+	      int found2 = 0;
+	      for (int vi = 0 ; vi < *num_boundary_nodes; vi++)
+		{
+		  if (a == (*boundary_nodes)[vi])
+		    found1 = 1;
+		  if (b == (*boundary_nodes)[vi])
+		    found2 = 1;
+		}
+	      if (!found1)
+		(*boundary_nodes)[b_index++] = a;
+	      if (!found2)
+		(*boundary_nodes)[b_index++] = b;
+	    }
 	  if (edge_check[a * num_nodes + b])
 	    {
 	      (*adj_matrix) -> cols[pos[a]++] = b;
@@ -170,7 +218,14 @@ int tri_mesh_csr_adj_matrix(csr **adj_matrix, const int *EToV,
 	    }
 	}
     }
-  
+
+  /*
+  for (int bn = 0; bn < *num_boundary_nodes; bn++)
+    {
+      printf("boundary_node[%d]: %d\n", bn, (*boundary_nodes)[bn]);
+    }
+  */
+    
   free(pos);
   free(edge_check);
   return error;

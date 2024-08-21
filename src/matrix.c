@@ -131,6 +131,18 @@ int write_int_array(const int *array, const int n, const char *filename)
   fclose(fout);
 }
 
+int write_EToV_array(const int *array, const int n, const char *filename)
+{
+
+  FILE *fout = fopen(filename, "w");
+  
+  for (int e = 0; e < n; e++)
+    {
+      fprintf(fout, "%d %d %d\n", array[e*3], array[e*3 + 1], array[e*3 + 2]);
+    }
+  fclose(fout);
+}
+
 int write_double_array(const double *array, const int n, const char *filename)
 {
 

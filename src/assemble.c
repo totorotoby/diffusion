@@ -143,9 +143,8 @@ int assemble_matrices(csr **S, csr **M, const int *EToV, const double *vx, const
 		  add_to_val(column_lists[row], col, J * local_mass[v][u]);
 		}
             }
-	    //printf("\n");
+	    
         }
-      //printf("\n\n");
     }
 
   // could prefix sum this
@@ -154,6 +153,8 @@ int assemble_matrices(csr **S, csr **M, const int *EToV, const double *vx, const
   int nnz = row_ptr[num_nodes];
 
   (*M) = (csr *) malloc(sizeof(csr));
+  (*M) -> n = num_nodes;
+  (*M) -> nnz = nnz;
   (*M) -> row_ptr = row_ptr;
   (*M) -> cols = (int *) malloc(nnz * sizeof(int));
   (*M) -> vals = (double *) malloc(nnz * sizeof(double));
@@ -174,6 +175,8 @@ int assemble_matrices(csr **S, csr **M, const int *EToV, const double *vx, const
       free_list(column_lists[row]);
     }
 
+  write_csr(*M, "mass_row_ptr", "mass_cols", "mass_vals");
+  
   free(column_lists);
 
   return 0;
