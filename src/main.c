@@ -57,6 +57,9 @@ int main(int argc, char *argv[])
   free(boundary_nodes);
   free(EToV);
   free_csr(M);
+  free(S->cols);
+  free(S->vals);
+  free(S);
   
   return error;
 }

@@ -16,6 +16,7 @@ typedef struct csr {
 
 int allocate_csr_novals(csr **matrix, const int nnz, const int n, int m);
 int allocate_csr(csr **matrix, const int nnz, const int n, int m);
+int allocate_csr_row_ptr(csr **matrix, int *row_ptr, const int nnz, const int n, int m);
 int free_csr_novals(csr *matrix);
 int free_csr(csr *matrix);
 int write_csr_novals(const csr *matrix, const char *f1, const char *f2);

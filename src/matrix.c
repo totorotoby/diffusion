@@ -7,12 +7,13 @@
 #include <string.h>
 #include "matrix.h"
 
-int allocate_csr_novals(csr **matrix, int nnz, int n)
+int allocate_csr_novals(csr **matrix, int nnz, int n, int m)
 {
 
   *matrix = (csr *) malloc(sizeof(csr));
   (*matrix) -> nnz = nnz;
   (*matrix) -> n = n;
+  (*matrix) -> m = m;
   (*matrix) -> cols = (int *) malloc(nnz * sizeof(int));
   (*matrix) -> row_ptr = (int *) calloc((n+1), sizeof(int));
   
@@ -20,15 +21,31 @@ int allocate_csr_novals(csr **matrix, int nnz, int n)
   
 }
 
-int allocate_csr(csr **matrix, int nnz, int n)
+int allocate_csr(csr **matrix, int nnz, int n, int m)
 {
 
   *matrix = (csr *) malloc(sizeof(csr));
   (*matrix) -> nnz = nnz;
   (*matrix) -> n = n;
+  (*matrix) -> m = m;
   (*matrix) -> cols = (int *) malloc(nnz * sizeof(int));
   (*matrix) -> vals = (double *) malloc(nnz * sizeof(double));
   (*matrix) -> row_ptr = (int *) calloc((n+1), sizeof(int));
+  
+  return 0;
+  
+}
+
+int allocate_csr_row_ptr(csr **matrix, int *row_ptr, int nnz, int n, int m)
+{
+
+  *matrix = (csr *) malloc(sizeof(csr));
+  (*matrix) -> nnz = nnz;
+  (*matrix) -> n = n;
+  (*matrix) -> m = m;
+  (*matrix) -> cols = (int *) malloc(nnz * sizeof(int));
+  (*matrix) -> vals = (double *) malloc(nnz * sizeof(double));
+  (*matrix) -> row_ptr = row_ptr;
   
   return 0;
   

@@ -118,7 +118,7 @@ int tri_mesh_csr_adj_matrix(csr **adj_matrix, int **boundary_nodes,
 {
 
   int error;
-  error = allocate_csr_novals(adj_matrix, 2*num_edges, num_nodes);
+  error = allocate_csr_novals(adj_matrix, 2*num_edges, num_nodes, num_nodes);
 
   // hashing to check if edge has already been added using a * N + b, where a = min(v, u), and b = max(v, u)
   // this probably won't work if we get too big... O(n^2) storage...
@@ -219,12 +219,7 @@ int tri_mesh_csr_adj_matrix(csr **adj_matrix, int **boundary_nodes,
 	}
     }
 
-  /*
-  for (int bn = 0; bn < *num_boundary_nodes; bn++)
-    {
-      printf("boundary_node[%d]: %d\n", bn, (*boundary_nodes)[bn]);
-    }
-  */
+  write_int_array((*boundary_nodes), (*num_boundary_nodes), "plotting/boundary_nodes");
     
   free(pos);
   free(edge_check);
