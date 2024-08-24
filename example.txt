@@ -867,7 +867,7 @@ NEIGHBORS 329
 
 > Number of elements: 329
 
-> Meshing time      : 1.267900e-02 sec
+> Meshing time      : 1.695700e-02 sec
 
 > ----------------------------------------------
 

@@ -168,6 +168,23 @@ how to compute:
   \end{split}
 \end{equation}
 
+\subsection{timestepping}
+
+everything boils down to:
+\begin{equation*}
+  \begin{split}
+    M\hat{u}_t = S\hat{u} + F
+  \end{split}
+\end{equation}
+
+\noindent doing crank:
+
+\begin{equation*}
+  \begin{split}
+    & M\frac{\hat{u}_{t+1} - \hat{u}_{t}}{\Delta t} = \frac{1}{2}(S\hat{u}_{t+1} + S\hat{u}_{t}) + \frac{1}{2}(F_{t+1} + F_{t})\\
+   &  M\hat{u}_{t+1} - \frac{{\Delta t}}{2}S\hat{u}_{t+1} = M\hat{u}_{t} + \frac{{\Delta t}}{2}S\hat{u}_{t} + \frac{{\Delta t}}{2}F_{t+1} + \frac{{\Delta t}}{2}F_{t}\\
+  \end{split}
+\end{equation}
 
 
 

@@ -33,26 +33,24 @@ void free_list(Node *head)
     }
 }
 
-void add_to_val(Node *head, int col, double mval, double sval)
+void add_to_val(Node *head, int col, double val)
 {
   Node *current = head;
   while (current != NULL)
     {
       if (current->col == col)
 	{
-	  current->mval += mval;
-	  current->sval += sval;
+	  current->val += val;
 	  break;
 	}
       current = current->next;
     }
 }
 
-void add_to_list(Node **head, int col, double mval, double sval)
+void add_to_list(Node **head, int col, double val)
 {
   Node *new_node = (Node *)malloc(sizeof(Node));
-  new_node->mval = mval;
-  new_node->sval = sval;
+  new_node->val = val;
   new_node->col = col;
   new_node->next = *head;
   *head = new_node;

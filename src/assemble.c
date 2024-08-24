@@ -1,5 +1,6 @@
-/* stiffness_assemble.c -- assembling stiffness matrix using
- *  gaussian quad on reference element
+/* stiffness_assemble.c --
+ *  assembling stiffness and mass matrix
+ *  using gaussian quad on reference element
  *
  * Written on Wednesday, 31 July 2024.
   */
@@ -29,8 +30,10 @@ double local_jacobian(double p1x, double p1y,
 	  ((p2y-p1y) * (p3x-p1x)))/4;
 }
 
-int assemble_matrices(csr **S, csr **M, const int *EToV, const double *vx, const double *vy,
-		      const int num_nodes, const int num_elements)
+int assemble_matrices(csr **S, csr **M, double M_scalar, double S_scalar,
+		      const int *EToV, const double *vx, const double *vy,
+		      const int *dirichlet_nodes, const int num_nodes,
+		      const int num_dirichlet, const int num_elements)
 {
 
   double quad_weights[NUM_ABSCISSAS] = {-9.0/8, 25.0/24, 25.0/24, 25.0/24};
@@ -62,11 +65,15 @@ int assemble_matrices(csr **S, csr **M, const int *EToV, const double *vx, const
   // Assembling Global Matrices
   // creating linked list and row_ptr
 
-  int *row_ptr = (int *) calloc((num_nodes + 1), sizeof(int));
-  Node **column_lists = (Node **) malloc(num_nodes * sizeof(Node *));
+  int *M_row_ptr = (int *) calloc((num_nodes + 1), sizeof(int));
+  Node **M_column_lists = (Node **) malloc(num_nodes * sizeof(Node *));
+  int *S_row_ptr = (int *) calloc((num_nodes + 1), sizeof(int));
+  Node **S_column_lists = (Node **) malloc(num_nodes * sizeof(Node *));
+
   for (int row = 0; row < num_nodes; row++)
     {
-      column_lists[row] = NULL;
+      M_column_lists[row] = NULL;
+      S_column_lists[row] = NULL;
     }
 
   for (int e = 0; e < num_elements; e++)
@@ -85,7 +92,17 @@ int assemble_matrices(csr **S, csr **M, const int *EToV, const double *vx, const
 
       for (int v = 0; v < NUM_BASIS; v++) 
 	{
+	  
 	  int row = EToV[NUM_BASIS * e + v];
+
+	  int is_dirichlet = 0;
+	  for (int b = 0; b < num_dirichlet; b++)
+	    {
+	      if (dirichlet_nodes[b] == row){
+		is_dirichlet = 1;
+		break;
+	      }
+	    }
 	  for (int u = 0; u < NUM_BASIS; u++)
 	    {
 	      int col = EToV[NUM_BASIS*e + u];
@@ -104,7 +121,7 @@ int assemble_matrices(csr **S, csr **M, const int *EToV, const double *vx, const
 					p1x, p2x, p3x);
 		  double y = phys_coord(abss[k][0], abss[k][1],
 					p1y, p2y, p3y);
-		  double s = speed(x, y);
+		  double s = specific_yield(x, y);
 		  double t = diffusivity(x,y);
 		  // loop over function eval
 		  for (int l = 0; l < DIM + 1; l++)
@@ -117,48 +134,87 @@ int assemble_matrices(csr **S, csr **M, const int *EToV, const double *vx, const
 		  mval += fi * s * fj * quad_weights[k];
 		  sval += fis * t * fjs * quad_weights[k];
 		}
-	      if (!is_col_in_list(column_lists[row], col)) {
-		row_ptr[row + 1]++;
-		add_to_list(&column_lists[row], col, J * mval, sval);
+
+	      if (is_dirichlet == 0){
+		// assumption is mass and stiffness have same sparsity pattern
+		// in the interior
+		if (!is_col_in_list(S_column_lists[row], col)) {
+		  M_row_ptr[row + 1]++;
+		  S_row_ptr[row + 1]++;
+		  add_to_list(&M_column_lists[row], col, J * M_scalar * mval);
+		  add_to_list(&S_column_lists[row], col, S_scalar * sval);
+		}
+		else {
+		  add_to_val(M_column_lists[row], col, J * M_scalar * mval);
+		  add_to_val(S_column_lists[row], col, S_scalar * sval);
+		}
 	      }
-	      else {
-		add_to_val(column_lists[row], col, J * mval, sval);
+	      
+	      if (is_dirichlet == 1){
+		if (!is_col_in_list(M_column_lists[row], col)) {
+		  M_row_ptr[row + 1]++;
+		  add_to_list(&M_column_lists[row], col, M_scalar * mval);
+		}
+		else {
+		  add_to_val(M_column_lists[row], col, M_scalar * mval);
+		}
+		if (S_column_lists[row] == NULL)
+		  {
+		    S_row_ptr[row + 1]++;
+		    add_to_list(&S_column_lists[row], row, S_scalar * 1.0);
+		  }
 	      }
 	    }
         }
     }
 
   // could prefix sum this
-  for (int row = 0; row < num_nodes; row++)
-    row_ptr[row + 1] += row_ptr[row];
-  int nnz = row_ptr[num_nodes];
-  printf("nnz in mass matrix: %d\n\n", nnz);
+  for (int row = 0; row < num_nodes; row++){
+    M_row_ptr[row + 1] += M_row_ptr[row];
+    S_row_ptr[row + 1] += S_row_ptr[row];
+  }
+  int M_nnz = M_row_ptr[num_nodes];
+  int S_nnz = S_row_ptr[num_nodes];
+  printf("nnz in mass matrix: %d\n", M_nnz);
+  printf("nnz in stiffness matrix: %d\n", S_nnz);
   
-  // right now the mass and stiffness matrices have the same sparsity pattern
-  allocate_csr_row_ptr(M, row_ptr, nnz, num_nodes, num_nodes);
-  allocate_csr_row_ptr(S, row_ptr, nnz, num_nodes, num_nodes);
+  // right now the mass and stiffness matrices have the same sprsity pattern
+  allocate_csr_row_ptr(M, M_row_ptr, M_nnz, num_nodes, num_nodes);
+  allocate_csr_row_ptr(S, S_row_ptr, S_nnz, num_nodes, num_nodes);
 
-  int nz = 0;
+  int M_nz = 0;
+  int S_nz = 0;
   for (int row = 0; row < num_nodes; row++)
     {
-      Node *current = column_lists[row];
+      Node *current = M_column_lists[row];
       while (current != NULL)
 	{
 	  int col = current -> col;
-	  (*M) -> cols[nz] = col;
-	  (*S) -> cols[nz] = col;
-	  (*M) -> vals[nz] = current->mval;
-	  (*S) -> vals[nz] = current->sval;
+	  (*M) -> cols[M_nz] = col;
+	  (*M) -> vals[M_nz] = current->val;
 	  
-	  nz++;
+	  M_nz++;
+	  current = current->next;
+	}      
+      free_list(M_column_lists[row]);
+      
+      current = S_column_lists[row];
+      while (current != NULL)
+	{
+	  int col = current -> col;
+	  (*S) -> cols[S_nz] = col;
+	  (*S) -> vals[S_nz] = current->val;
+	  
+	  S_nz++;
 	  current = current->next;
 	}
-      free_list(column_lists[row]);
+      free_list(S_column_lists[row]);
     }
 
   write_csr(*M, "mass_row_ptr", "mass_cols", "mass_vals");
-  
-  free(column_lists);
 
+  free(M_column_lists);
+  free(S_column_lists);
+  
   return 0;
 }

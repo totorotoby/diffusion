@@ -10,6 +10,7 @@ OBJS += $(OBJDIR)/matrix.o
 OBJS += $(OBJDIR)/params.o
 OBJS += $(OBJDIR)/assemble.o
 OBJS += $(OBJDIR)/linkedlist.o
+OBJS += $(OBJDIR)/matrix_ops.o
 
 diffusion: $(OBJS)
 	$(CC) -o $@ $(SRCDIR)/main.c $^ $(CFLAGS) $(ASAN_FLAGS)
