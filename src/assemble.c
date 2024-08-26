@@ -102,7 +102,9 @@ int assemble_matrices(csr **S, csr **M, double M_scalar, double S_scalar,
 		is_dirichlet = 1;
 		break;
 	      }
+
 	    }
+
 	  for (int u = 0; u < NUM_BASIS; u++)
 	    {
 	      int col = EToV[NUM_BASIS*e + u];
@@ -190,6 +192,8 @@ int assemble_matrices(csr **S, csr **M, double M_scalar, double S_scalar,
       while (current != NULL)
 	{
 	  int col = current -> col;
+	  if ((col == 39 && row == 51) || (col == 51 && row == 39))
+	    printf("row: %d col: %d val: %f\n", row, col, current->val);
 	  (*M) -> cols[M_nz] = col;
 	  (*M) -> vals[M_nz] = current->val;
 	  
@@ -210,8 +214,6 @@ int assemble_matrices(csr **S, csr **M, double M_scalar, double S_scalar,
 	}
       free_list(S_column_lists[row]);
     }
-
-  write_csr(*M, "mass_row_ptr", "mass_cols", "mass_vals");
 
   free(M_column_lists);
   free(S_column_lists);

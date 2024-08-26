@@ -13,5 +13,5 @@ int tri_mesh_csr_adj_matrix(csr **adj_matrix, int **boundary_nodes, int *num_bou
 			    int num_nodes);
 int degree_comp(const void *v1, const void *v2, const void *degree);
 int cuthill_mckee(const csr *adj_matrix, const int *degree,
-		  int **EToV, double **vx, double **vy,
-		  const int num_nodes, const int num_elements);
+		  int **EToV, double **vx, double **vy, int **boundary_nodes,
+		  const int num_boundary_nodes, const int num_nodes, const int num_elements);

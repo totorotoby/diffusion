@@ -9,7 +9,7 @@
 
 
 // A must have more nnz than B
-int csr_subtract(csr *A, csr *B, csr **result)
+int csr_add(csr *A, csr *B, double scalar, csr **result)
 {
 
   *result = malloc(sizeof(csr));
@@ -17,7 +17,7 @@ int csr_subtract(csr *A, csr *B, csr **result)
   (*result)->m = A->m;
 
   // temp storage to figure out nnz of (*result), and get vals/cols
-  int *temp_vals = (int *)malloc(A->nnz * sizeof(int));
+  double *temp_vals = (double *)malloc(A->nnz * sizeof(double));
   int *temp_cols = (int *)malloc(A->nnz * sizeof(int));
   int *temp_row_ptr = (int *)malloc((A->nnz + 1) * sizeof(int));
   temp_row_ptr[0] = 0;
@@ -50,7 +50,7 @@ int csr_subtract(csr *A, csr *B, csr **result)
 		}
 	    }
 
-	  double result_val = A_val - B_val;
+	  double result_val = A_val + scalar * B_val;
 	  if (result_val != 0.0)
 	    {
 	      temp_vals[temp_count + local_count] = result_val;
@@ -64,12 +64,12 @@ int csr_subtract(csr *A, csr *B, csr **result)
       temp_count += local_count;
     }
 
-  printf("nnz in LHS: %d\n", temp_count);
   (*result)->nnz = temp_count;
   (*result)->vals = (double *)malloc((*result)->nnz * sizeof(double));
   (*result)->cols = (int *)malloc((*result)->nnz * sizeof(int));
   (*result)->row_ptr = (int *)malloc(((*result)->n + 1) * sizeof(int));
 
+#pragma omp parallel for
   for (int i = 0; i < (*result)->nnz; ++i)
     {
       (*result)->vals[i] = temp_vals[i];
@@ -79,6 +79,7 @@ int csr_subtract(csr *A, csr *B, csr **result)
   for (int i = 0; i <= (*result)->n; ++i)
     {
       (*result)->row_ptr[i] = temp_row_ptr[i];
+      //printf("%d\n", temp_row_ptr[i]);
     }
 
   // Free temporary arrays
@@ -92,5 +93,24 @@ int csr_subtract(csr *A, csr *B, csr **result)
 int spmv(csr *A, double *y, double *x)
 {
 
+  int rows = A->n;
+  double *vals = A->vals;
+  int *cols = A->cols;
+  int *row_ptr = A -> row_ptr;
 
+#pragma omp parallel for
+  for (int row = 0; row < rows; row++)
+    {
+
+      int begin = row_ptr[row];
+      int end = row_ptr[row+1];
+      double sum = 0;
+      
+      for (int i = begin ; i < end ; i++)
+	{
+	  sum += vals[i] * x[cols[i]];
+	}
+      y[row] = sum;
+    }
+  return 0;
 }

@@ -4,12 +4,19 @@ import matplotlib.pyplot as plt
 from scipy.sparse import csr_array
 import sys
 
+
+if len(sys.argv) != 8:
+    print("Usage:")
+    print("python3 plot_mesh_reordering.py <row_ptr> <cols> <perm> <vx> <vy> <EToV> <boundary_nodes>")
+    exit(0)
+
 row_ptr = np.genfromtxt(sys.argv[1], delimiter='\n')
 cols = np.genfromtxt(sys.argv[2], delimiter='\n')
 perm = np.genfromtxt(sys.argv[3], delimiter='\n')
 vx = np.genfromtxt(sys.argv[4], delimiter='\n')
 vy = np.genfromtxt(sys.argv[5], delimiter='\n')
 EToV = np.loadtxt(sys.argv[6], usecols = range(3), dtype=int)
+boundary_nodes = np.genfromtxt(sys.argv[7], delimiter='\n')
 
 locs = {}
 for i in range(len(row_ptr) - 1):
@@ -25,10 +32,18 @@ for i in range(len(row_ptr) - 1):
 adj_matrix = csr_array((np.ones(len(cols)), cols, row_ptr), shape=(len(row_ptr) - 1, len(row_ptr) - 1))
 
 mesh = nx.from_scipy_sparse_array(adj_matrix)
-#fig, (ax1, ax2) = plt.subplots(1, 2)
-nx.draw(mesh, pos=locs, with_labels=True)#, ax=ax1)
+
+color_map = []
+for node in mesh:
+    if node in boundary_nodes:
+        color_map.append('blue')
+    else:
+        color_map.append('red')
+        
+fig, (ax1, ax2) = plt.subplots(1, 2)
+nx.draw(mesh, pos=locs, with_labels=True, node_color = color_map, ax=ax1)
 mesh = nx.relabel_nodes(mesh, new_label)
-#nx.draw(mesh, pos=new_locs, with_labels=True, ax=ax2)
+nx.draw(mesh, pos=new_locs, with_labels=True, ax=ax2)
 
 for (i, e) in enumerate(EToV):
 
@@ -42,7 +57,7 @@ for (i, e) in enumerate(EToV):
     x = (vx0 + vx1 + vx2) / 3
     y = (vy0 + vy1 + vy2) / 3
     
-    plt.text(x, y, str(i), fontsize=12, color='red', ha='left', va='bottom')
+    #plt.text(x, y, str(i), fontsize=12, color='red', ha='left', va='bottom')
 
 #ax2.set_visible(False)
 plt.show()

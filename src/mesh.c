@@ -232,8 +232,8 @@ int degree_comp(const void *v1, const void *v2, const void *degree)
 }
 
 int cuthill_mckee(const csr *adj_matrix, const int *degree,
-		  int **EToV, double **vx, double **vy,
-		  const int num_nodes, const int num_elements)
+		  int **EToV, double **vx, double **vy, int **boundary_nodes,
+		  const int num_boundary_nodes, const int num_nodes, const int num_elements)
 {
 
   // initalize permutation matrix
@@ -288,8 +288,11 @@ int cuthill_mckee(const csr *adj_matrix, const int *degree,
   //permuting orginal arrays
   double *nvx = (double *) malloc(num_nodes * sizeof(double));
   double *nvy = (double *) malloc(num_nodes * sizeof(double));
+  int *nboundary_nodes = (int *) malloc(num_boundary_nodes * sizeof(int));
   int *nEToV = (int *) malloc(NV_PER_ELEM * num_elements * sizeof(int));
 
+  for (int v = 0; v < num_boundary_nodes ; v++)
+    nboundary_nodes[v] = perm[(*boundary_nodes)[v]];
 
   #pragma omp parallel for
   for (int v = 0; v < num_nodes ; v++)
@@ -315,10 +318,12 @@ int cuthill_mckee(const csr *adj_matrix, const int *degree,
   free(*EToV);
   free(*vx);
   free(*vy);
+  free(*boundary_nodes);
 
   *EToV = nEToV;
   *vx = nvx;
   *vy = nvy;
+  *boundary_nodes = nboundary_nodes;
   
   free(queue);
   free(perm);

@@ -15,7 +15,13 @@ def plot_sparsity_pattern(csr):
     plt.show()
 
 def check_symmetric(csr):
-    return (csr != csr.transpose()).nnz == 0
+    mat = (csr - csr.transpose())
+    for row in range(mat.shape[0] - 1):
+        begin = mat.indptr[row]
+        end = mat.indptr[row+1]
+        for i in range(begin, end):
+            print("(" + str(row) + "," + str( mat.indices[i]) + "," + str(mat.data[i]) + ")")
+    exit(0)
 
 def main(row_ptr_file, columns_file, values_file):
 
@@ -35,7 +41,7 @@ def main(row_ptr_file, columns_file, values_file):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Plot the sparsity pattern of a CSR matrix from files, check symmetry, positive definiteness, and semi-definiteness.")
+    parser = argparse.ArgumentParser(description="Plot the sparsity pattern of a CSR matrix from files, and check symmetry.")
     parser.add_argument("row_ptr_file", help="Path to the row pointer file")
     parser.add_argument("columns_file", help="Path to the columns file")
     parser.add_argument("values_file", help="Path to the values file")
