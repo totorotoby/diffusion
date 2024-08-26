@@ -155,10 +155,10 @@ int assemble_matrices(csr **S, csr **M, double M_scalar, double S_scalar,
 	      if (is_dirichlet == 1){
 		if (!is_col_in_list(M_column_lists[row], col)) {
 		  M_row_ptr[row + 1]++;
-		  add_to_list(&M_column_lists[row], col, M_scalar * mval);
+		  add_to_list(&M_column_lists[row], col, J * M_scalar * mval);
 		}
 		else {
-		  add_to_val(M_column_lists[row], col, M_scalar * mval);
+		  add_to_val(M_column_lists[row], col, J * M_scalar * mval);
 		}
 		if (S_column_lists[row] == NULL)
 		  {
@@ -192,11 +192,8 @@ int assemble_matrices(csr **S, csr **M, double M_scalar, double S_scalar,
       while (current != NULL)
 	{
 	  int col = current -> col;
-	  if ((col == 39 && row == 51) || (col == 51 && row == 39))
-	    printf("row: %d col: %d val: %f\n", row, col, current->val);
 	  (*M) -> cols[M_nz] = col;
 	  (*M) -> vals[M_nz] = current->val;
-	  
 	  M_nz++;
 	  current = current->next;
 	}      

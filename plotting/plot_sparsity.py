@@ -15,13 +15,12 @@ def plot_sparsity_pattern(csr):
     plt.show()
 
 def check_symmetric(csr):
-    mat = (csr - csr.transpose())
+    mat = (abs(csr) - abs(csr.transpose()))
     for row in range(mat.shape[0] - 1):
         begin = mat.indptr[row]
         end = mat.indptr[row+1]
         for i in range(begin, end):
             print("(" + str(row) + "," + str( mat.indices[i]) + "," + str(mat.data[i]) + ")")
-    exit(0)
 
 def main(row_ptr_file, columns_file, values_file):
 

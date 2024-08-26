@@ -114,3 +114,48 @@ int spmv(csr *A, double *y, double *x)
     }
   return 0;
 }
+
+void is_symmetric_csr(csr *A)
+{
+
+  int n = A->n;
+  int *row_ptr = A->row_ptr;
+  int *cols  = A->cols;
+  double *vals = A->vals;
+
+  for (int row = 0; row < n; row++)
+    {
+
+    int begin = row_ptr[row];
+    int end = row_ptr[row + 1];
+      for (int i = begin; i < end; i++)
+	{
+	  
+	  int col = cols[i];
+	  double val = vals[i];
+
+	  int sbegin = row_ptr[col];
+	  int send = row_ptr[col + 1];
+	  int found = 0;
+	  
+	  for (int j = sbegin; j < send; j++) {
+
+	    int scol = cols[j];
+	    double sval = vals[j];
+	    
+	    if (scol == row) {
+	      if (sval == val) {
+		found = 1;
+	      } else {
+		found = 2;
+		printf("miss match vals %f and %f at %d %d\n", sval, val, row, col);
+		}
+	    }
+	  }
+	  if (found == 0)
+	    {
+	      printf("bad sparsity at %d %d\n", row, col);
+	    }
+	}
+    }
+}

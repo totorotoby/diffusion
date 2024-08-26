@@ -63,7 +63,8 @@ int main(int argc, char *argv[])
   
   
   assemble_matrices(&S, &M, 1.0, 1.0, EToV, vx, vy, boundary_nodes, num_nodes, num_boundary_nodes, num_elements);
-
+  is_symmetric_csr(M);
+  
   write_csr(M, "plotting/M_row_ptr", "plotting/M_cols", "plotting/M_vals");
   //getting lhs for crank-nicholson
   csr_add(M, S, -t_step/2, &A);
@@ -72,7 +73,6 @@ int main(int argc, char *argv[])
   printf("nnz in A: %d\n", A->nnz);
   printf("nnz in RHS: %d\n", A->nnz);
   
-
   write_csr(S, "plotting/S_row_ptr", "plotting/S_cols", "plotting/S_vals");
   write_csr(A, "plotting/A_row_ptr", "plotting/A_cols", "plotting/A_vals");
   
