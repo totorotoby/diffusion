@@ -14,13 +14,34 @@ def plot_sparsity_pattern(csr):
     plt.title("Sparsity Pattern")
     plt.show()
 
-def check_symmetric(csr):
-    mat = (abs(csr) - abs(csr.transpose()))
-    for row in range(mat.shape[0] - 1):
-        begin = mat.indptr[row]
-        end = mat.indptr[row+1]
-        for i in range(begin, end):
-            print("(" + str(row) + "," + str( mat.indices[i]) + "," + str(mat.data[i]) + ")")
+def is_symmetric_csr(matrix: csr_matrix, tol=1e-10) -> bool:
+    
+    if matrix.shape[0] != matrix.shape[1]:
+        return False
+
+    for i in range(matrix.shape[0]):
+        row_start = matrix.indptr[i]
+        row_end = matrix.indptr[i + 1]
+        for idx in range(row_start, row_end):
+            j = matrix.indices[idx]
+            a_ij = matrix.data[idx]
+            
+            row_j_start = matrix.indptr[j]
+            row_j_end = matrix.indptr[j + 1]
+            found_symmetric = False
+            for k in range(row_j_start, row_j_end):
+                if matrix.indices[k] == i:
+                    a_ji = matrix.data[k]
+                    if np.abs(a_ij - a_ji) < tol:
+                        found_symmetric = True
+                        break
+                    else:
+                        print(i, j, a_ij, a_ji)
+                    
+            if not found_symmetric:
+                return False
+    
+    return True
 
 def main(row_ptr_file, columns_file, values_file):
 
@@ -31,11 +52,17 @@ def main(row_ptr_file, columns_file, values_file):
     num_rows = len(row_ptr) - 1
     csr = csr_matrix((values, columns, row_ptr), shape=(num_rows, num_rows))
 
-    if check_symmetric(csr):
+    if is_symmetric_csr(csr):
         print("The matrix is symmetric.")
     else:
         print("The matrix is not symmetric.")
 
+    eigenvalues = eigsh(csr, k=1, which='SA', return_eigenvectors=False)
+    pos_def = np.all(eigenvalues > 0)
+    print(eigenvalues)
+    print(pos_def)
+    
+        
     plot_sparsity_pattern(csr)
 
 if __name__ == "__main__":

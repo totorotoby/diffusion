@@ -55,25 +55,39 @@ int main(int argc, char *argv[])
   error = cuthill_mckee(adj_matrix, degree, &EToV, &vx, &vy, &boundary_nodes, num_boundary_nodes, num_nodes, num_elements);
   free(degree);
   printf("\nFound bandwidth reduced node ordering\n\n");
-  free_csr_novals(adj_matrix);
-
-  printf("boundary nodes\n");
-  //for (int nb = 0 ; nb < num_boundary_nodes; nb++)
-  //printf("%d\n", boundary_nodes[nb]);
-  
+  free_csr_novals(adj_matrix);  
   
   assemble_matrices(&S, &M, 1.0, 1.0, EToV, vx, vy, boundary_nodes, num_nodes, num_boundary_nodes, num_elements);
-  is_symmetric_csr(M);
+
   
-  write_csr(M, "plotting/M_row_ptr", "plotting/M_cols", "plotting/M_vals");
   //getting lhs for crank-nicholson
   csr_add(M, S, -t_step/2, &A);
   csr_add(M, S, t_step/2, &RHS);
 
   printf("nnz in A: %d\n", A->nnz);
   printf("nnz in RHS: %d\n", A->nnz);
+
+  if (is_symmetric_csr(A))
+      printf("A is symmetric\n");
+  else
+    printf("A is not symmetric\n");
+  if (is_symmetric_csr(M))
+      printf("M is symmetric\n");
+  else
+    printf("M is not symmetric\n");
+  if (is_symmetric_csr(S))
+      printf("S is symmetric\n");
+  else
+    printf("S is not symmetric\n");
+  if (is_symmetric_csr(RHS))
+      printf("RHS is symmetric\n");
+  else
+    printf("RHS is not symmetric\n");
+
   
-  write_csr(S, "plotting/S_row_ptr", "plotting/S_cols", "plotting/S_vals");
+  
+      
+
   write_csr(A, "plotting/A_row_ptr", "plotting/A_cols", "plotting/A_vals");
   
   free_csr(M);
