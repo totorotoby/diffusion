@@ -89,12 +89,7 @@ int main(int argc, char *argv[]) {
   else
     printf("RHS is not symmetric\n");
 
-  write_csr(A, "plotting/A_row_ptr", "plotting/A_cols", "plotting/A_vals");
-
-  free_csr(M);
-  free_csr(S);
-
-  // solution a previous timestep
+  // solution at previous timestep
   double *u_prev = (double *)malloc(sizeof(double) * num_nodes);
   double *u = (double *)malloc(sizeof(double) * num_nodes);
 
@@ -106,7 +101,34 @@ int main(int argc, char *argv[]) {
   for (int node = 0; node < num_nodes; node++)
     u_prev[node] = gaussian(vx[node], vy[node], .5, .5, .1, .1);
 
-  linear_solver(u, u_prev, f, A, RHS, 400);
+
+  int *M_col_ptr;
+  int *M_rows;
+  double *M_vals;
+  int *S_col_ptr;
+  int *S_rows;
+  double *S_vals;
+
+  csr_to_csc(num_nodes, num_nodes,
+	     M->row_ptr, M->cols, M->vals,
+	     &M_col_ptr, &M_rows, &M_vals);
+  
+  csr_to_csc(num_nodes, num_nodes,
+	     S->row_ptr, S->cols, S->vals,
+	     &S_col_ptr, &S_rows, &S_vals);
+
+  
+  write_int_array(M_col_ptr, num_nodes, "mats/M_col_ptr");
+  write_int_array(M_rows, M->nnz, "mats/M_rows");
+  write_double_array(M_vals, M->nnz, "mats/M_vals");
+  write_int_array(S_col_ptr, num_nodes, "mats/S_col_ptr");
+  write_int_array(S_rows, S->nnz, "mats/S_rows");
+  write_double_array(S_vals, S->nnz, "mats/S_vals");
+
+  
+  
+  free_csr(M);
+  free_csr(S);
 
   free(f);
   free_csr(RHS);
@@ -117,6 +139,12 @@ int main(int argc, char *argv[]) {
   free(vy);
   free(boundary_nodes);
   free(EToV);
+  free(M_col_ptr);
+  free(M_rows);
+  free(M_vals);
+  free(S_col_ptr);
+  free(S_rows);
+  free(S_vals);
 
   return error;
 }

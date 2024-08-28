@@ -3,8 +3,8 @@
  * Written on Thursday, 15 August 2024.
  */
 
-#include "matrix_ops.h"
 #include "matrix.h"
+#include "matrix_ops.h"
 #include <stdio.h>
 
 // A must have more nnz than B
@@ -134,15 +134,54 @@ bool is_symmetric_csr(csr *A) {
             found = 1;
           } else {
             sym = false;
-            printf("miss match vals %f and %f at %d %d\n", sval, val, row, col);
+            //printf("miss match vals %f and %f at %d %d\n", sval, val, row, col);
           }
         }
       }
       if (found == 0) {
         sym = false;
-        printf("bad sparsity at %d %d\n", row, col);
+        //printf("bad sparsity at %d %d\n", row, col);
       }
     }
   }
   return sym;
+}
+
+
+void csr_to_csc(int num_rows, int num_cols,
+		const int *row_ptr, const int *cols, const double *vals,
+                int **col_ptr, int **row_indices, double **values) {
+ 
+    *col_ptr = (int *)calloc(num_cols + 1, sizeof(int));
+ 
+     for (int i = 0; i < num_rows; i++) {
+        for (int j = row_ptr[i]; j < row_ptr[i + 1]; j++) {
+            (*col_ptr)[cols[j] + 1]++;
+        }
+    }
+
+     for (int i = 1; i <= num_cols; i++) {
+        (*col_ptr)[i] += (*col_ptr)[i - 1];
+    }
+
+    int nnz = (*col_ptr)[num_cols];
+    *row_indices = (int *)malloc(nnz * sizeof(int));
+    *values = (double *)malloc(nnz * sizeof(double));
+    int *next_index = (int *)malloc((num_cols + 1) * sizeof(int));
+    
+    for (int i = 0; i <= num_cols; i++) {
+        next_index[i] = (*col_ptr)[i];
+    }
+
+    for (int i = 0; i < num_rows; i++) {
+        for (int j = row_ptr[i]; j < row_ptr[i + 1]; j++) {
+            int col = cols[j];
+            int dest = next_index[col];
+            (*row_indices)[dest] = i;
+            (*values)[dest] = vals[j];
+            next_index[col]++;
+        }
+    }
+
+    free(next_index);
 }

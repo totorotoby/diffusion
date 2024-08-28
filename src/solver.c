@@ -3,8 +3,8 @@
  * Written on Monday, 26 August 2024.
  */
 
-#include "solver.h"
 #include "matrix.h"
+#include "solver.h"
 #include "matrix_ops.h"
 #include <stdio.h>
 

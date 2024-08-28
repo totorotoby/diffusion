@@ -1,3 +1,4 @@
+#include <stdbool.h>
 typedef struct Node {
   double val;
   int col;
